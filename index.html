@@ -1,679 +1,700 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>국가공무원인재개발원 (NHI) 안내 포털</title>
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Lucide Icons -->
-    <script src="https://unpkg.com/lucide@latest"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <style>
-        body { font-family: 'Pretendard', sans-serif; }
-        .gradient-bg {
-            background: linear-gradient(135deg, #2b091e 0%, #4a154b 50%, #831843 100%);
-        }
-        .nav-blur {
-            backdrop-filter: blur(12px);
-            background-color: rgba(255, 255, 255, 0.88);
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>로컬 보안 엑셀 통계 분석 대시보드</title>
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- SheetJS (xlsx) for 100% in-browser memory parsing -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@300;400;500;600;700;800&display=swap');
+    body {
+      font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
+    }
+    .custom-scroll::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    .custom-scroll::-webkit-scrollbar-thumb {
+      background-color: #cbd5e1;
+      border-radius: 9999px;
+    }
+    .drag-over {
+      border-color: #4f46e5 !important;
+      background-color: #eef2ff !important;
+    }
+  </style>
 </head>
-<body class="bg-rose-50/30 text-slate-800 antialiased flex flex-col min-h-screen">
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col custom-scroll">
 
-    <!-- 상단 공식 바 -->
-    <div class="bg-slate-900 text-slate-400 text-xs py-1.5 px-4 sm:px-8 border-b border-slate-800 flex justify-between items-center">
-        <div class="flex items-center space-x-2">
-            <span class="inline-block w-2 h-2 rounded-full bg-pink-500"></span>
-            <span>대한민국 인사혁신처 소속 공공기관</span>
+  <!-- Header -->
+  <header class="bg-white border-b border-slate-200 sticky top-0 z-50">
+    <div class="max-w-6xl mx-auto px-4 py-3.5 flex justify-between items-center">
+      <div class="flex items-center space-x-3">
+        <div class="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center text-white shadow-md shadow-indigo-100">
+          <i class="fa-solid fa-shield-halved text-lg"></i>
         </div>
-        <div class="flex items-center space-x-4 text-xs">
-            <a href="https://www.nhi.go.kr" target="_blank" class="hover:text-pink-300 transition flex items-center gap-1">공식 웹사이트 바로가기 <i data-lucide="external-link" class="w-3 h-3"></i></a>
-        </div>
-    </div>
-
-    <!-- 네비게이션 바 -->
-    <header class="sticky top-0 z-50 nav-blur border-b border-pink-100 shadow-xs">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
-            <a href="#" class="flex items-center gap-3">
-                <div class="w-11 h-11 rounded-xl bg-gradient-to-tr from-pink-600 via-rose-500 to-fuchsia-600 flex items-center justify-center text-white font-black text-xl shadow-md shadow-pink-500/25">
-                    NHI
-                </div>
-                <div>
-                    <span class="block text-xl font-extrabold text-slate-900 tracking-tight">국가공무원인재개발원</span>
-                    <span class="block text-[11px] font-semibold text-pink-600 tracking-wider">NATIONAL HUMAN RESOURCES DEVELOPMENT INSTITUTE</span>
-                </div>
-            </a>
-            <nav class="hidden md:flex items-center gap-8 text-sm font-semibold text-slate-600">
-                <a href="#about" class="hover:text-pink-600 transition">기관소개 및 비전</a>
-                <a href="#services" class="hover:text-pink-600 transition">주요 교육 업무</a>
-                <a href="#digital" class="hover:text-pink-600 transition">디지털 교육 플랫폼</a>
-                <a href="#location" class="hover:text-pink-600 transition">찾아오시는 길</a>
-                <a href="#location" class="px-4 py-2 rounded-lg bg-pink-600 hover:bg-pink-700 text-white font-medium shadow-sm shadow-pink-500/20 transition">오시는 길 안내</a>
-            </nav>
-            <div class="md:hidden flex items-center">
-                <button id="mobile-menu-btn" class="p-2 text-slate-600 hover:text-pink-600 focus:outline-none">
-                    <i data-lucide="menu" class="w-6 h-6"></i>
-                </button>
-            </div>
-        </div>
-        <!-- 모바일 메뉴 -->
-        <div id="mobile-menu" class="hidden md:hidden border-t border-pink-100 bg-white px-4 pt-3 pb-5 space-y-2 text-sm font-medium">
-            <a href="#about" class="block py-2 text-slate-700 hover:text-pink-600">기관소개 및 비전</a>
-            <a href="#services" class="block py-2 text-slate-700 hover:text-pink-600">주요 교육 업무</a>
-            <a href="#digital" class="block py-2 text-slate-700 hover:text-pink-600">디지털 교육 플랫폼</a>
-            <a href="#location" class="block py-2 text-slate-700 hover:text-pink-600">찾아오시는 길</a>
-        </div>
-    </header>
-
-    <!-- 히어로 섹션 -->
-    <section class="gradient-bg text-white py-20 lg:py-28 relative overflow-hidden">
-        <div class="absolute inset-0 opacity-15 bg-[radial-gradient(#ffffff_1px,transparent_1px)] [background-size:24px_24px]"></div>
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">
-            <span class="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full text-xs font-semibold bg-pink-500/20 text-pink-200 border border-pink-400/30 mb-6 backdrop-blur-md">
-                <i data-lucide="sparkles" class="w-3.5 h-3.5 text-pink-300"></i> 미래를 선도하는 글로벌 공직인재 양성
+        <div>
+          <h1 class="text-base font-bold text-slate-900 tracking-tight flex items-center gap-2">
+            로컬 보안 엑셀 통계 분석기
+            <span class="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+              <i class="fa-solid fa-lock text-[10px] mr-1"></i>100% 메모리 로컬 연산 (외부 전송 0%)
             </span>
-            <h1 class="text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight leading-tight max-w-4xl mx-auto mb-6">
-                국민에게 신뢰받는 공직자,<br class="hidden sm:inline">
-                <span class="text-transparent bg-clip-text bg-gradient-to-r from-pink-300 via-rose-200 to-amber-200">국가공무원인재개발원</span>이 함께합니다
-            </h1>
-            <p class="text-base sm:text-lg text-pink-100/90 max-w-2xl mx-auto mb-10 leading-relaxed font-normal">
-                시대 변화에 발맞춘 따뜻한 공직가치 교육과 AI·디지털 리터러시 강화, 글로벌 역량 교육을 통해 대한민국 공직 사회의 미래를 열어갑니다.
+          </h1>
+          <p class="text-xs text-slate-500">서버 전송 없이 브라우저 단독으로 엑셀을 즉각 해석하여 핵심 3대 통계 기법으로 시각화합니다.</p>
+        </div>
+      </div>
+      <div id="resetButtonContainer" class="hidden">
+        <button onclick="resetApp()" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 transition">
+          <i class="fa-solid fa-rotate-left"></i> 다른 파일 분석
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="max-w-6xl mx-auto px-4 py-8 flex-1 w-full">
+
+    <!-- Screen 1: File Upload Screen (Default) -->
+    <section id="uploadSection" class="max-w-2xl mx-auto py-10">
+      <div class="text-center mb-8">
+        <h2 class="text-2xl font-extrabold text-slate-900 tracking-tight">엑셀 파일을 선택해 분석을 시작하세요</h2>
+        <p class="text-sm text-slate-500 mt-2">
+          업로드된 파일은 외부 서버로 전송되지 않으며, 사용자 컴퓨터의 브라우저 메모리 안에서만 즉시 처리됩니다.
+        </p>
+      </div>
+
+      <!-- Drag & Drop Card -->
+      <div id="dropZone" 
+           class="border-2 border-dashed border-slate-300 rounded-3xl p-10 bg-white text-center hover:border-indigo-400 transition cursor-pointer shadow-sm relative group"
+           onclick="document.getElementById('fileInput').click()">
+        <input type="file" id="fileInput" accept=".xlsx, .xls" class="hidden" onchange="handleFileSelect(event)">
+        
+        <div class="w-16 h-16 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition">
+          <i class="fa-solid fa-file-excel text-3xl"></i>
+        </div>
+        <h3 class="text-base font-bold text-slate-800">엑셀 파일(.xlsx, .xls)을 여기에 끌어다 놓거나 클릭</h3>
+        <p class="text-xs text-slate-400 mt-1">기존 폴더의 <span class="font-medium text-slate-600">가상기업 3개 5개년매출데이터.xlsx</span> 또는 유사 규격 지원</p>
+
+        <div class="mt-6 inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold shadow-sm transition">
+          <i class="fa-solid fa-arrow-up-from-bracket"></i> 파일 찾아보기
+        </div>
+
+        <div class="mt-8 pt-4 border-t border-slate-100 flex items-center justify-center gap-6 text-[11px] text-slate-400">
+          <span><i class="fa-solid fa-check text-emerald-500 mr-1"></i> 서버 통신 없음</span>
+          <span><i class="fa-solid fa-check text-emerald-500 mr-1"></i> 100% Client-Side 처리</span>
+          <span><i class="fa-solid fa-check text-emerald-500 mr-1"></i> 실시간 3대 통계 연산</span>
+        </div>
+      </div>
+
+      <!-- Format Tip -->
+      <div class="mt-6 bg-slate-100/80 rounded-2xl p-4 text-xs text-slate-600 space-y-1">
+        <p class="font-bold text-slate-800 flex items-center gap-1.5">
+          <i class="fa-solid fa-circle-question text-slate-400"></i> 참고 규격 안내:
+        </p>
+        <p class="text-slate-500 leading-relaxed">
+          첫 번째 열은 <strong>기준일자(월별/연도 등)</strong>, 두 번째 열부터는 분석하고자 하는 <strong>각 항목(기업 매출, 실적 등)</strong>이 포함된 표 형태의 시트를 자동으로 감지하여 분석합니다.
+        </p>
+      </div>
+    </section>
+
+    <!-- Screen 2: Dashboard View (Shown after file parsing) -->
+    <section id="dashboardSection" class="hidden space-y-8">
+      
+      <!-- Meta Information Banner -->
+      <div class="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-sm flex flex-wrap justify-between items-center gap-4">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-lg">
+            <i class="fa-solid fa-table"></i>
+          </div>
+          <div>
+            <h3 class="text-sm font-bold text-slate-900 flex items-center gap-2">
+              <span id="metaFileName" class="text-indigo-600">파일명</span> 분석 완료
+            </h3>
+            <p class="text-xs text-slate-500">
+              분석 대상 시트: <span id="metaSheetName" class="font-semibold text-slate-700">월간매출</span> | 
+              데이터 수: <span id="metaRowCount" class="font-semibold text-slate-700">60</span>행 × <span id="metaColCount" class="font-semibold text-slate-700">3</span>개 항목
             </p>
-            <div class="flex flex-wrap items-center justify-center gap-4">
-                <a href="#services" class="px-6 py-3.5 rounded-xl bg-pink-600 hover:bg-pink-500 font-semibold text-sm sm:text-base text-white shadow-lg shadow-pink-600/40 transition flex items-center gap-2">
-                    주요 교육과정 보기 <i data-lucide="arrow-right" class="w-4 h-4"></i>
-                </a>
-                <a href="#location" class="px-6 py-3.5 rounded-xl bg-white/10 hover:bg-white/20 border border-white/25 font-semibold text-sm sm:text-base text-white backdrop-blur-md transition flex items-center gap-2">
-                    <i data-lucide="map-pin" class="w-4 h-4 text-pink-300"></i> 오시는 길 확인
-                </a>
-            </div>
-
-            <!-- 핵심 지표 카드 -->
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto mt-16 text-left">
-                <div class="p-4 rounded-xl bg-white/10 border border-white/15 backdrop-blur-sm">
-                    <div class="text-2xl sm:text-3xl font-extrabold text-pink-300 mb-1">1949년</div>
-                    <div class="text-xs text-pink-100/80">국립공무원훈련원 개원 역사</div>
-                </div>
-                <div class="p-4 rounded-xl bg-white/10 border border-white/15 backdrop-blur-sm">
-                    <div class="text-2xl sm:text-3xl font-extrabold text-rose-300 mb-1">연 20만+</div>
-                    <div class="text-xs text-pink-100/80">연간 온·오프라인 교육생</div>
-                </div>
-                <div class="p-4 rounded-xl bg-white/10 border border-white/15 backdrop-blur-sm">
-                    <div class="text-2xl sm:text-3xl font-extrabold text-fuchsia-300 mb-1">2개 캠퍼스</div>
-                    <div class="text-xs text-pink-100/80">진천 본원 및 과천 분원</div>
-                </div>
-                <div class="p-4 rounded-xl bg-white/10 border border-white/15 backdrop-blur-sm">
-                    <div class="text-2xl sm:text-3xl font-extrabold text-amber-200 mb-1">AI·스마트</div>
-                    <div class="text-xs text-pink-100/80">차세대 공무원 인재 양성 플랫폼</div>
-                </div>
-            </div>
+          </div>
         </div>
+        <div class="flex items-center gap-2">
+          <span class="text-xs px-2.5 py-1 rounded-lg bg-slate-100 text-slate-600 font-medium">
+            <i class="fa-solid fa-bolt text-amber-500 mr-1"></i>연산 시간: <span id="metaExecTime">0.02</span>초
+          </span>
+        </div>
+      </div>
+
+      <!-- KPI Overview Cards -->
+      <div id="kpiContainer" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <!-- Rendered by JS -->
+      </div>
+
+      <!-- STAT 1: 기술통계량 분석 (Descriptive Statistics) -->
+      <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm space-y-4">
+        <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+          <div>
+            <span class="text-[11px] font-bold text-indigo-600 uppercase tracking-wider">Method 01</span>
+            <h3 class="text-base font-bold text-slate-900">핵심 기술통계량 분석 (Descriptive Statistics)</h3>
+            <p class="text-xs text-slate-500">평균, 표준편차, 중앙값, 변동계수(CV), 최댓값/최솟값 등 분포의 중심과 산포도 측정</p>
+          </div>
+          <span class="p-2 rounded-xl bg-indigo-50 text-indigo-600"><i class="fa-solid fa-calculator"></i></span>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+          <div class="lg:col-span-8 overflow-x-auto">
+            <table class="w-full text-xs text-left border-collapse">
+              <thead>
+                <tr id="descTableHead" class="bg-slate-50 border-y border-slate-200 text-slate-600">
+                  <th class="py-2.5 px-3 font-semibold">통계 지표</th>
+                  <!-- Dynamic Column Headers -->
+                </tr>
+              </thead>
+              <tbody id="descTableBody" class="divide-y divide-slate-100 text-slate-700">
+                <!-- Dynamic Content -->
+              </tbody>
+            </table>
+          </div>
+
+          <div class="lg:col-span-4 bg-slate-50 p-4 rounded-xl border border-slate-200/80 space-y-2.5 text-xs text-slate-600">
+            <h4 class="font-bold text-slate-900 flex items-center gap-1.5">
+              <i class="fa-solid fa-circle-info text-indigo-600"></i> 친절한 통계 해설
+            </h4>
+            <div id="descExplanation" class="space-y-2 leading-relaxed">
+              <!-- Dynamic Explanation -->
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- STAT 2: 단순선형회귀분석 및 성장 추세 (Linear Regression) -->
+      <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm space-y-4">
+        <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+          <div>
+            <span class="text-[11px] font-bold text-indigo-600 uppercase tracking-wider">Method 02</span>
+            <h3 class="text-base font-bold text-slate-900">단순선형회귀분석 및 시계열 추세 (Linear Regression & Trend)</h3>
+            <p class="text-xs text-slate-500">시간 경과에 따른 항목별 성장 기울기(Slope)와 결정계수($R^2$)를 도출하여 성장 속도 비교</p>
+          </div>
+          <span class="p-2 rounded-xl bg-blue-50 text-blue-600"><i class="fa-solid fa-chart-line"></i></span>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+          <div class="lg:col-span-8 bg-white p-2 rounded-xl border border-slate-100">
+            <div class="h-80 w-full">
+              <canvas id="regressionChart"></canvas>
+            </div>
+          </div>
+
+          <div class="lg:col-span-4 flex flex-col justify-between space-y-3">
+            <div id="regressionEquations" class="space-y-2.5 text-xs">
+              <!-- Dynamic Equation Cards -->
+            </div>
+            <div id="regressionExplanation" class="bg-slate-50 p-4 rounded-xl border border-slate-200 text-xs text-slate-600 leading-relaxed">
+              <!-- Dynamic Explanation -->
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- STAT 3: 피어슨 상관계수 분석 (Pearson Correlation) -->
+      <div class="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm space-y-4">
+        <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+          <div>
+            <span class="text-[11px] font-bold text-indigo-600 uppercase tracking-wider">Method 03</span>
+            <h3 class="text-base font-bold text-slate-900">상관계수 분석 (Pearson Correlation Matrix)</h3>
+            <p class="text-xs text-slate-500">항목 간의 상관계수($r$)를 측정하여 서로 동반 성장하는지, 독립적인지, 대체 관계인지 규명</p>
+          </div>
+          <span class="p-2 rounded-xl bg-purple-50 text-purple-600"><i class="fa-solid fa-table-cells"></i></span>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+          <div class="lg:col-span-7 overflow-x-auto">
+            <table class="w-full text-xs text-center border-collapse">
+              <thead>
+                <tr id="corrTableHead" class="bg-slate-100 text-slate-700">
+                  <th class="p-2.5 text-left font-semibold">피어슨 상관계수 ($r$)</th>
+                  <!-- Dynamic Headers -->
+                </tr>
+              </thead>
+              <tbody id="corrTableBody" class="divide-y divide-slate-200">
+                <!-- Dynamic Correlation Matrix Rows -->
+              </tbody>
+            </table>
+          </div>
+
+          <div class="lg:col-span-5 bg-slate-50 p-4 rounded-xl border border-slate-200 text-xs text-slate-600 space-y-2 leading-relaxed">
+            <h4 class="font-bold text-slate-900 flex items-center gap-1.5">
+              <i class="fa-solid fa-magnifying-glass-chart text-purple-600"></i> 상관성 친절 해설
+            </h4>
+            <div id="corrExplanation" class="space-y-2">
+              <!-- Dynamic Explanation -->
+            </div>
+          </div>
+        </div>
+      </div>
+
     </section>
 
-    <!-- 기관 소개 및 비전 섹션 -->
-    <section id="about" class="py-20 bg-white border-b border-pink-100">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="text-center max-w-3xl mx-auto mb-16">
-                <span class="text-pink-600 font-bold text-xs uppercase tracking-wider bg-pink-50 px-3 py-1 rounded-full border border-pink-200">Vision & Mission</span>
-                <h2 class="text-3xl font-black text-slate-900 mt-3 mb-4 tracking-tight">국가인재개발의 중추기관</h2>
-                <p class="text-slate-600 leading-relaxed text-sm sm:text-base">
-                    국가공무원인재개발원은 1949년 출범 이래 국가와 국민에 헌신하는 유능한 공직자를 육성해 온 대한민국 중앙공무원 교육훈련 총괄기관입니다.
-                </p>
-            </div>
+  </main>
 
-            <div class="grid md:grid-cols-3 gap-8">
-                <!-- 카드 1 -->
-                <div class="bg-rose-50/40 border border-pink-100 rounded-2xl p-7 hover:shadow-lg hover:border-pink-300 transition duration-300">
-                    <div class="w-12 h-12 rounded-xl bg-pink-100 text-pink-600 flex items-center justify-center mb-6 shadow-xs">
-                        <i data-lucide="shield-check" class="w-6 h-6"></i>
-                    </div>
-                    <h3 class="text-xl font-bold text-slate-900 mb-3">올바른 공직가치 확립</h3>
-                    <p class="text-slate-600 text-sm leading-relaxed">
-                        국가관, 공직윤리, 청렴성, 헌신적 태도를 확립하여 국민에게 신뢰받고 공공의 이익을 최우선으로 추구하는 바람직한 공직자상을 구현합니다.
-                    </p>
-                </div>
-                <!-- 카드 2 -->
-                <div class="bg-rose-50/40 border border-pink-100 rounded-2xl p-7 hover:shadow-lg hover:border-rose-300 transition duration-300">
-                    <div class="w-12 h-12 rounded-xl bg-rose-100 text-rose-600 flex items-center justify-center mb-6 shadow-xs">
-                        <i data-lucide="cpu" class="w-6 h-6"></i>
-                    </div>
-                    <h3 class="text-xl font-bold text-slate-900 mb-3">미래 선도 역량 강화</h3>
-                    <p class="text-slate-600 text-sm leading-relaxed">
-                        디지털 대전환(DX), 인공지능(AI), 데이터 기반 행정 및 첨단 과학기술 등 급변하는 국가 행정 환경에 유연하게 대응하는 직무 전문성을 배양합니다.
-                    </p>
-                </div>
-                <!-- 카드 3 -->
-                <div class="bg-rose-50/40 border border-pink-100 rounded-2xl p-7 hover:shadow-lg hover:border-fuchsia-300 transition duration-300">
-                    <div class="w-12 h-12 rounded-xl bg-fuchsia-100 text-fuchsia-600 flex items-center justify-center mb-6 shadow-xs">
-                        <i data-lucide="globe-2" class="w-6 h-6"></i>
-                    </div>
-                    <h3 class="text-xl font-bold text-slate-900 mb-3">글로벌 리더십 함양</h3>
-                    <p class="text-slate-600 text-sm leading-relaxed">
-                        국제 교류 프로그램과 외국 공무원 대상 K-행정 발전 경험 전수를 통해 대한민국의 국가 경쟁력과 글로벌 위상을 강화합니다.
-                    </p>
-                </div>
-            </div>
-        </div>
-    </section>
+  <!-- Footer -->
+  <footer class="bg-white border-t border-slate-200 py-6 text-center text-xs text-slate-400">
+    <div class="max-w-6xl mx-auto px-4 flex flex-col sm:flex-row justify-between items-center gap-2">
+      <p>보안 안내: 모든 연산은 웹 브라우저 로컬 샌드박스 메모리 상에서만 즉각 수행됩니다.</p>
+      <p>단독 실행형 Standalone App (HTML / CSS / Vanilla JS)</p>
+    </div>
+  </footer>
 
-    <!-- 주요 업무 섹션 -->
-    <section id="services" class="py-20 bg-slate-50/70">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="text-center max-w-3xl mx-auto mb-16">
-                <span class="text-rose-600 font-bold text-xs uppercase tracking-wider bg-rose-50 px-3 py-1 rounded-full border border-rose-200">Core Programs</span>
-                <h2 class="text-3xl font-black text-slate-900 mt-3 mb-4 tracking-tight">주요 교육훈련 업무 안내</h2>
-                <p class="text-slate-600 leading-relaxed text-sm sm:text-base">
-                    직급별 기본교육부터 고위공직자 리더십, 전문 직무 및 글로벌 역량 개발까지 체계적인 교육과정을 운영합니다.
-                </p>
-            </div>
+  <script>
+    // State Store
+    let parsedDataset = null;
+    let regressionChartInstance = null;
 
-            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <!-- 업무 1 -->
-                <div class="bg-white rounded-2xl p-6 border border-pink-100 shadow-xs hover:shadow-md hover:border-pink-300 transition">
-                    <div class="flex items-center gap-3 mb-4">
-                        <span class="p-2.5 rounded-lg bg-pink-50 text-pink-600">
-                            <i data-lucide="graduation-cap" class="w-5 h-5"></i>
-                        </span>
-                        <div>
-                            <span class="text-xs font-bold text-pink-600 uppercase tracking-wide">신임자 과정</span>
-                            <h3 class="text-lg font-bold text-slate-900">신규 공직자 기본교육</h3>
-                        </div>
-                    </div>
-                    <p class="text-slate-600 text-sm leading-relaxed mb-4">
-                        5급 및 7·9급 공채 합격자 등 신규 임용 공무원을 대상으로 올바른 국가관, 정책기획 역량, 기본 행정 실무 및 조직 적응력을 체계적으로 양성합니다.
-                    </p>
-                    <ul class="text-xs text-slate-500 space-y-1.5 border-t border-pink-50 pt-3">
-                        <li class="flex items-center gap-1.5"><i data-lucide="check" class="w-3.5 h-3.5 text-pink-500"></i> 신임관리자과정 (5급 공채)</li>
-                        <li class="flex items-center gap-1.5"><i data-lucide="check" class="w-3.5 h-3.5 text-pink-500"></i> 신임실무자과정 (7·9급 임용자)</li>
-                    </ul>
-                </div>
+    const COLORS = [
+      { border: '#3b82f6', bg: '#3b82f6', light: '#eff6ff', trend: '#1d4ed8' },
+      { border: '#10b981', bg: '#10b981', light: '#ecfdf5', trend: '#047857' },
+      { border: '#f59e0b', bg: '#f59e0b', light: '#fffbeb', trend: '#b45309' },
+      { border: '#8b5cf6', bg: '#8b5cf6', light: '#f5f3ff', trend: '#6d28d9' },
+      { border: '#ec4899', bg: '#ec4899', light: '#fdf2f8', trend: '#be185d' }
+    ];
 
-                <!-- 업무 2 -->
-                <div class="bg-white rounded-2xl p-6 border border-pink-100 shadow-xs hover:shadow-md hover:border-rose-300 transition">
-                    <div class="flex items-center gap-3 mb-4">
-                        <span class="p-2.5 rounded-lg bg-rose-50 text-rose-600">
-                            <i data-lucide="award" class="w-5 h-5"></i>
-                        </span>
-                        <div>
-                            <span class="text-xs font-bold text-rose-600 uppercase tracking-wide">리더십 과정</span>
-                            <h3 class="text-lg font-bold text-slate-900">고위공직자 역량개발</h3>
-                        </div>
-                    </div>
-                    <p class="text-slate-600 text-sm leading-relaxed mb-4">
-                        고위공무원단 후보자 및 과장급 직위 승진자를 위한 전략적 정책 결정, 갈등 조정, 조직 변화 관리 및 위기 대응 리더십을 배양합니다.
-                    </p>
-                    <ul class="text-xs text-slate-500 space-y-1.5 border-t border-pink-50 pt-3">
-                        <li class="flex items-center gap-1.5"><i data-lucide="check" class="w-3.5 h-3.5 text-rose-500"></i> 고위공무원단 후보자과정</li>
-                        <li class="flex items-center gap-1.5"><i data-lucide="check" class="w-3.5 h-3.5 text-rose-500"></i> 과장급 역량평가 및 리더십 과정</li>
-                    </ul>
-                </div>
+    // Drag and Drop Event Handlers
+    const dropZone = document.getElementById('dropZone');
+    ['dragenter', 'dragover'].forEach(eventName => {
+      dropZone.addEventListener(eventName, e => {
+        e.preventDefault();
+        e.stopPropagation();
+        dropZone.classList.add('drag-over');
+      });
+    });
+    ['dragleave', 'drop'].forEach(eventName => {
+      dropZone.addEventListener(eventName, e => {
+        e.preventDefault();
+        e.stopPropagation();
+        dropZone.classList.remove('drag-over');
+      });
+    });
+    dropZone.addEventListener('drop', e => {
+      const files = e.dataTransfer.files;
+      if (files.length > 0) processExcelFile(files[0]);
+    });
 
-                <!-- 업무 3 -->
-                <div class="bg-white rounded-2xl p-6 border border-pink-100 shadow-xs hover:shadow-md hover:border-fuchsia-300 transition">
-                    <div class="flex items-center gap-3 mb-4">
-                        <span class="p-2.5 rounded-lg bg-fuchsia-50 text-fuchsia-600">
-                            <i data-lucide="bot" class="w-5 h-5"></i>
-                        </span>
-                        <div>
-                            <span class="text-xs font-bold text-fuchsia-600 uppercase tracking-wide">디지털 혁신</span>
-                            <h3 class="text-lg font-bold text-slate-900">AI 및 데이터 기반 행정</h3>
-                        </div>
-                    </div>
-                    <p class="text-slate-600 text-sm leading-relaxed mb-4">
-                        생성형 AI 행정 활용, 공공데이터 분석 실습, 디지털 전환 정책 입안 등 미래 지능형 정부 구현을 위한 실무 기술 교육을 집중 운영합니다.
-                    </p>
-                    <ul class="text-xs text-slate-500 space-y-1.5 border-t border-pink-50 pt-3">
-                        <li class="flex items-center gap-1.5"><i data-lucide="check" class="w-3.5 h-3.5 text-fuchsia-500"></i> 생성형 AI 프롬프트 엔지니어링 실무</li>
-                        <li class="flex items-center gap-1.5"><i data-lucide="check" class="w-3.5 h-3.5 text-fuchsia-500"></i> 파이썬/R 기반 공공 빅데이터 분석</li>
-                    </ul>
-                </div>
+    function handleFileSelect(e) {
+      const file = e.target.files[0];
+      if (file) processExcelFile(file);
+    }
 
-                <!-- 업무 4 -->
-                <div class="bg-white rounded-2xl p-6 border border-pink-100 shadow-xs hover:shadow-md hover:border-pink-300 transition">
-                    <div class="flex items-center gap-3 mb-4">
-                        <span class="p-2.5 rounded-lg bg-pink-50 text-pink-600">
-                            <i data-lucide="languages" class="w-5 h-5"></i>
-                        </span>
-                        <div>
-                            <span class="text-xs font-bold text-pink-600 uppercase tracking-wide">국제 교류</span>
-                            <h3 class="text-lg font-bold text-slate-900">글로벌 교육 및 협력</h3>
-                        </div>
-                    </div>
-                    <p class="text-slate-600 text-sm leading-relaxed mb-4">
-                        국외파견 공무원 사전 역량 교육, 다자 외교 협상 실무 및 개발도상국 고위 공무원 초청 공공행정 연수(HRD ODA) 사업을 총괄합니다.
-                    </p>
-                    <ul class="text-xs text-slate-500 space-y-1.5 border-t border-pink-50 pt-3">
-                        <li class="flex items-center gap-1.5"><i data-lucide="check" class="w-3.5 h-3.5 text-pink-500"></i> 외국 공무원 초청 한국 공공행정 연수</li>
-                        <li class="flex items-center gap-1.5"><i data-lucide="check" class="w-3.5 h-3.5 text-pink-500"></i> 글로벌 통상·외교 역량강화 세미나</li>
-                    </ul>
-                </div>
+    // In-browser 100% Client-side Processing
+    function processExcelFile(file) {
+      const startTime = performance.now();
+      const reader = new FileReader();
 
-                <!-- 업무 5 -->
-                <div class="bg-white rounded-2xl p-6 border border-pink-100 shadow-xs hover:shadow-md hover:border-rose-300 transition">
-                    <div class="flex items-center gap-3 mb-4">
-                        <span class="p-2.5 rounded-lg bg-rose-50 text-rose-600">
-                            <i data-lucide="monitor-play" class="w-5 h-5"></i>
-                        </span>
-                        <div>
-                            <span class="text-xs font-bold text-rose-600 uppercase tracking-wide">e-러닝 허브</span>
-                            <h3 class="text-lg font-bold text-slate-900">‘나라배움터’ 플랫폼 운영</h3>
-                        </div>
-                    </div>
-                    <p class="text-slate-600 text-sm leading-relaxed mb-4">
-                        대한민국 모든 국가·지방공무원을 위한 국가공무원 상시학습 통합 포털 ‘나라배움터’를 구축·운영하며 풍부한 마이크로러닝 콘텐츠를 제공합니다.
-                    </p>
-                    <ul class="text-xs text-slate-500 space-y-1.5 border-t border-rose-50 pt-3">
-                        <li class="flex items-center gap-1.5"><i data-lucide="check" class="w-3.5 h-3.5 text-rose-500"></i> 맞춤형 상시학습 플랫폼 및 모바일 지원</li>
-                        <li class="flex items-center gap-1.5"><i data-lucide="check" class="w-3.5 h-3.5 text-rose-500"></i> 테마별 실시간 라이브 화상강의 지원</li>
-                    </ul>
-                </div>
+      reader.onload = function(e) {
+        try {
+          const data = new Uint8Array(e.target.result);
+          // Parse completely in client memory
+          const workbook = XLSX.read(data, { type: 'array', cellDates: true });
 
-                <!-- 업무 6 -->
-                <div class="bg-white rounded-2xl p-6 border border-pink-100 shadow-xs hover:shadow-md hover:border-fuchsia-300 transition">
-                    <div class="flex items-center gap-3 mb-4">
-                        <span class="p-2.5 rounded-lg bg-fuchsia-50 text-fuchsia-600">
-                            <i data-lucide="book-open-check" class="w-5 h-5"></i>
-                        </span>
-                        <div>
-                            <span class="text-xs font-bold text-fuchsia-600 uppercase tracking-wide">연구 및 컨설팅</span>
-                            <h3 class="text-lg font-bold text-slate-900">공공인재개발 정책연구</h3>
-                        </div>
-                    </div>
-                    <p class="text-slate-600 text-sm leading-relaxed mb-4">
-                        정부 각 부처의 교육훈련 수요를 분석하고 교수기법, 에듀테크(EduTech) 도입 연구 및 공공 HRD 기관 대상 전문 컨설팅을 지원합니다.
-                    </p>
-                    <ul class="text-xs text-slate-500 space-y-1.5 border-t border-fuchsia-50 pt-3">
-                        <li class="flex items-center gap-1.5"><i data-lucide="check" class="w-3.5 h-3.5 text-fuchsia-500"></i> 공공 HRD 컨설팅 및 표준 가이드 보급</li>
-                        <li class="flex items-center gap-1.5"><i data-lucide="check" class="w-3.5 h-3.5 text-fuchsia-500"></i> 최신 교수설계 및 교육효과성 측정 연구</li>
-                    </ul>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- 나라배움터 배너 -->
-    <section id="digital" class="bg-gradient-to-r from-pink-900 via-rose-900 to-purple-950 text-white py-14">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-6">
-            <div class="space-y-2 text-center md:text-left">
-                <div class="inline-block px-3 py-1 bg-pink-500/30 text-pink-200 rounded-md text-xs font-semibold">언제 어디서나 학습하는</div>
-                <h3 class="text-2xl sm:text-3xl font-extrabold tracking-tight">공무원 스마트 러닝 플랫폼 ‘나라배움터’</h3>
-                <p class="text-pink-100/90 text-sm max-w-xl">
-                    직무, 어학, 리더십, IT 등 4,000여 개 이상의 풍부한 이러닝 과정과 실시간 웹세미나를 경험해 보세요.
-                </p>
-            </div>
-            <a href="https://e-learning.nhi.go.kr" target="_blank" class="shrink-0 px-6 py-3 rounded-xl bg-white text-pink-900 hover:bg-pink-50 font-bold text-sm shadow-md transition flex items-center gap-2">
-                나라배움터 바로가기 <i data-lucide="arrow-up-right" class="w-4 h-4"></i>
-            </a>
-        </div>
-    </section>
-
-    <!-- 찾아오시는 길 섹션 -->
-    <section id="location" class="py-20 bg-white">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="text-center max-w-3xl mx-auto mb-16">
-                <span class="text-pink-600 font-bold text-xs uppercase tracking-wider bg-pink-50 px-3 py-1 rounded-full border border-pink-200">Location & Guide</span>
-                <h2 class="text-3xl font-black text-slate-900 mt-3 mb-4 tracking-tight">찾아오시는 길</h2>
-                <p class="text-slate-600 leading-relaxed text-sm sm:text-base">
-                    국가공무원인재개발원은 충북 진천 본원과 경기 과천 분원으로 구성되어 있습니다. 방문 목적에 맞는 청사를 확인해 주시기 바랍니다.
-                </p>
-            </div>
-
-            <!-- 캠퍼스 선택 탭 버튼 -->
-            <div class="flex justify-center mb-8">
-                <div class="inline-flex p-1.5 bg-rose-50/80 rounded-2xl border border-pink-200">
-                    <button id="tab-jincheon" onclick="switchCampus('jincheon')" class="px-6 py-2.5 rounded-xl font-bold text-sm bg-pink-600 text-white shadow-sm transition">
-                        진천 본원 (충북 진천)
-                    </button>
-                    <button id="tab-gwacheon" onclick="switchCampus('gwacheon')" class="px-6 py-2.5 rounded-xl font-medium text-sm text-slate-600 hover:text-slate-900 transition">
-                        과천 분원 (경기 과천)
-                    </button>
-                </div>
-            </div>
-
-            <!-- 진천 본원 내용 -->
-            <div id="campus-jincheon" class="campus-content">
-                <div class="grid lg:grid-cols-12 gap-8 items-start">
-                    <!-- 지도 및 기본정보 -->
-                    <div class="lg:col-span-6 bg-rose-50/30 border border-pink-200/80 rounded-3xl p-6 sm:p-8">
-                        <div class="flex items-start justify-between mb-6">
-                            <div>
-                                <span class="text-xs font-bold text-pink-600 bg-pink-50 px-2.5 py-1 rounded-md border border-pink-200">본원 캠퍼스</span>
-                                <h3 class="text-2xl font-black text-slate-900 mt-2">진천 본원</h3>
-                                <p class="text-slate-500 text-sm mt-1">충청북도 진천군 덕산읍 교학로 84 (충북혁신도시)</p>
-                            </div>
-                            <span class="p-3 bg-pink-100 text-pink-600 rounded-2xl">
-                                <i data-lucide="building-2" class="w-6 h-6"></i>
-                            </span>
-                        </div>
-
-                        <!-- 지도 시각화 박스 -->
-                        <div class="relative w-full h-72 bg-slate-200 rounded-2xl overflow-hidden border border-pink-200 flex items-center justify-center mb-6">
-                            <iframe 
-                                title="국가공무원인재개발원 진천본원 지도"
-                                class="w-full h-full border-0" 
-                                src="https://www.google.com/maps?q=충청북도+진천군+덕산읍+교학로+84&output=embed"
-                                loading="lazy">
-                            </iframe>
-                        </div>
-
-                        <div class="grid grid-cols-2 gap-4 text-xs sm:text-sm mb-6">
-                            <div class="p-3.5 bg-white rounded-xl border border-pink-100 shadow-xs">
-                                <span class="font-semibold text-slate-500 block mb-1">대표 전화</span>
-                                <span class="text-slate-800 font-bold text-base">043-931-6114</span>
-                            </div>
-                            <div class="p-3.5 bg-white rounded-xl border border-pink-100 shadow-xs">
-                                <span class="font-semibold text-slate-500 block mb-1">우편번호</span>
-                                <span class="text-slate-800 font-bold text-base">27873</span>
-                            </div>
-                        </div>
-
-                        <!-- 셔틀버스 특별 안내 카드 (진천) -->
-                        <div class="bg-gradient-to-br from-pink-500/10 via-rose-500/5 to-transparent border border-pink-300 rounded-2xl p-5">
-                            <div class="flex items-center gap-2.5 text-pink-700 font-bold text-sm mb-2">
-                                <i data-lucide="bus-front" class="w-5 h-5 text-pink-600"></i>
-                                <span>[필독] 진천본원 공식 셔틀버스 운행 안내</span>
-                            </div>
-                            <div class="text-xs text-slate-600 space-y-2">
-                                <div class="p-2.5 bg-white/80 rounded-lg border border-pink-200/60">
-                                    <strong class="text-slate-800 block text-xs mb-0.5">① 충북혁신도시 터미널 ⇄ 인재원 셔틀버스</strong>
-                                    <ul class="list-disc list-inside space-y-0.5 text-slate-600">
-                                        <li><strong>탑승 장소:</strong> 충북혁신도시 버스터미널 정문 우측 승차장</li>
-                                        <li><strong>출근/입교 시간:</strong> 08:00, 08:20 정규 배차 (교육과정 입교일 08:30~09:20 수시 추가 운행)</li>
-                                        <li><strong>퇴근/퇴교 시간:</strong> 교육 종료 시각에 맞춰 터미널 방면 연계 운행</li>
-                                        <li><strong>소요 시간:</strong> 약 5분 소요 (도보 이동 시 약 15분)</li>
-                                    </ul>
-                                </div>
-                                <div class="p-2.5 bg-white/80 rounded-lg border border-pink-200/60">
-                                    <strong class="text-slate-800 block text-xs mb-0.5">② 정부세종청사 ⇄ 진천본원 통근버스 (임차)</strong>
-                                    <p class="text-[11px] text-slate-500 leading-normal">
-                                        세종시청, 국세청(인사혁신처 앞), 다정동, 도담동(싱싱장터), 해밀마을 경유 ⇄ 진천본원 왕복 운행 (출근: 오전 07:00 전후 출발 / 퇴근: 월~목 17:55, 금 17:05 본원 출발)
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- 교통수단 상세 안내 -->
-                    <div class="lg:col-span-6 space-y-4">
-                        <!-- 1. 시외 / 고속버스 안내 -->
-                        <div class="bg-white border border-pink-100 rounded-2xl p-5 hover:border-pink-400 transition shadow-xs">
-                            <div class="flex items-center gap-3 mb-2 text-pink-600 font-bold text-base">
-                                <i data-lucide="bus" class="w-5 h-5"></i> 1. 시외버스 / 고속버스
-                            </div>
-                            <p class="text-slate-600 text-xs sm:text-sm leading-relaxed mb-3">
-                                전국 주요 버스터미널에서 <strong>'충북혁신도시 공용버스터미널'</strong>행 버스를 탑승합니다.
-                            </p>
-                            <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs">
-                                <div class="bg-rose-50/50 p-2 rounded-lg border border-pink-100 text-slate-700">
-                                    <span class="font-bold block text-pink-700">서울남부터미널</span> 약 1시간 30분
-                                </div>
-                                <div class="bg-rose-50/50 p-2 rounded-lg border border-pink-100 text-slate-700">
-                                    <span class="font-bold block text-pink-700">동서울터미널</span> 약 1시간 30분
-                                </div>
-                                <div class="bg-rose-50/50 p-2 rounded-lg border border-pink-100 text-slate-700">
-                                    <span class="font-bold block text-pink-700">수원터미널</span> 약 1시간 10분
-                                </div>
-                                <div class="bg-rose-50/50 p-2 rounded-lg border border-pink-100 text-slate-700">
-                                    <span class="font-bold block text-pink-700">대전복합터미널</span> 약 1시간 20분
-                                </div>
-                                <div class="bg-rose-50/50 p-2 rounded-lg border border-pink-100 text-slate-700">
-                                    <span class="font-bold block text-pink-700">청주시외터미널</span> 약 1시간 40분
-                                </div>
-                                <div class="bg-rose-50/50 p-2 rounded-lg border border-pink-100 text-slate-700">
-                                    <span class="font-bold block text-pink-700">인천터미널</span> 약 2시간 35분
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- 2. 혁신도시 내 시내버스 및 터미널 이동 -->
-                        <div class="bg-white border border-pink-100 rounded-2xl p-5 hover:border-pink-400 transition shadow-xs">
-                            <div class="flex items-center gap-3 mb-2 text-rose-600 font-bold text-base">
-                                <i data-lucide="map-pinned" class="w-5 h-5"></i> 2. 터미널에서 인재원 이동 (시내버스/도보)
-                            </div>
-                            <div class="text-xs sm:text-sm text-slate-600 space-y-2">
-                                <p class="leading-relaxed">
-                                    <strong>• 도보 이동 (권장):</strong> 터미널에서 인재개발원까지 약 1.2km 거리로, 혁신도시 내 보도를 따라 <strong>도보 약 15분</strong>이면 편리하게 이동할 수 있습니다.
-                                </p>
-                                <p class="leading-relaxed">
-                                    <strong>• 시내·순환버스 노선:</strong><br>
-                                    - <strong>혁신도시 순환버스:</strong> <span class="font-semibold text-rose-600">순환1번, 순환2번</span> 버스 탑승 후 인재원 인근 정류장 하차<br>
-                                    - <strong>진천·음성 농어촌버스:</strong> 진천터미널/대소/무극 방면 시내버스 탑승 후 혁신도시 내 경유 하차<br>
-                                    - <strong>택시 이용 시:</strong> 기본요금 거리 (약 5분 소요, 요금 약 4,000원 선)
-                                </p>
-                            </div>
-                        </div>
-
-                        <!-- 3. 고속철도 (KTX/SRT) 연계 -->
-                        <div class="bg-white border border-pink-100 rounded-2xl p-5 hover:border-rose-400 transition shadow-xs">
-                            <div class="flex items-center gap-3 mb-2 text-indigo-600 font-bold text-base">
-                                <i data-lucide="train" class="w-5 h-5 text-pink-600"></i> 3. 고속철도 (KTX / SRT)
-                            </div>
-                            <p class="text-slate-600 text-xs sm:text-sm leading-relaxed">
-                                <strong>오송역(KTX/SRT)</strong> 하차 ▷ <strong>B3번 광역BRT</strong> 또는 시외버스를 이용하여 세종·오송 연계 이동, 또는 혁신도시 방면 직통 셔틀/대중교통 이용 (자가용/택시 기준 약 45분~50분 소요).
-                            </p>
-                        </div>
-
-                        <!-- 4. 자가용 이용 및 주차 -->
-                        <div class="bg-white border border-pink-100 rounded-2xl p-5 hover:border-fuchsia-400 transition shadow-xs">
-                            <div class="flex items-center gap-3 mb-2 text-fuchsia-600 font-bold text-base">
-                                <i data-lucide="car" class="w-5 h-5"></i> 4. 자가용 및 주차 안내
-                            </div>
-                            <p class="text-slate-600 text-xs sm:text-sm leading-relaxed mb-2">
-                                • <strong>중부고속도로:</strong> 진천IC 진출 ▷ 안골삼거리(21번 국도 음성 방면) ▷ 인재원<br>
-                                • <strong>평택제천고속도로:</strong> 북진천IC 또는 금왕꽃동네IC 진출 ▷ 21번 국도 진천 방면<br>
-                                • <strong>주차장:</strong> 약 500대 수용 가능한 야외 및 지하 주차장 완비 (교육생 입교 시 사전 차량번호 등록 필요).
-                            </p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 과천 분원 내용 -->
-            <div id="campus-gwacheon" class="campus-content hidden">
-                <div class="grid lg:grid-cols-12 gap-8 items-start">
-                    <!-- 지도 및 기본정보 -->
-                    <div class="lg:col-span-6 bg-rose-50/30 border border-pink-200/80 rounded-3xl p-6 sm:p-8">
-                        <div class="flex items-start justify-between mb-6">
-                            <div>
-                                <span class="text-xs font-bold text-rose-600 bg-rose-50 px-2.5 py-1 rounded-md border border-rose-200">분원 캠퍼스</span>
-                                <h3 class="text-2xl font-black text-slate-900 mt-2">과천 분원</h3>
-                                <p class="text-slate-500 text-sm mt-1">경기도 과천시 교육원로 118 (중앙동)</p>
-                            </div>
-                            <span class="p-3 bg-rose-100 text-rose-600 rounded-2xl">
-                                <i data-lucide="landmark" class="w-6 h-6"></i>
-                            </span>
-                        </div>
-
-                        <!-- 지도 시각화 박스 -->
-                        <div class="relative w-full h-72 bg-slate-200 rounded-2xl overflow-hidden border border-pink-200 flex items-center justify-center mb-6">
-                            <iframe 
-                                title="국가공무원인재개발원 과천분원 지도"
-                                class="w-full h-full border-0" 
-                                src="https://www.google.com/maps?q=경기도+과천시+교육원로+118&output=embed"
-                                loading="lazy">
-                            </iframe>
-                        </div>
-
-                        <div class="grid grid-cols-2 gap-4 text-xs sm:text-sm mb-6">
-                            <div class="p-3.5 bg-white rounded-xl border border-pink-100 shadow-xs">
-                                <span class="font-semibold text-slate-500 block mb-1">대표 전화</span>
-                                <span class="text-slate-800 font-bold text-base">02-500-8500</span>
-                            </div>
-                            <div class="p-3.5 bg-white rounded-xl border border-pink-100 shadow-xs">
-                                <span class="font-semibold text-slate-500 block mb-1">우편번호</span>
-                                <span class="text-slate-800 font-bold text-base">13809</span>
-                            </div>
-                        </div>
-
-                        <!-- 셔틀버스 특별 안내 카드 (과천) -->
-                        <div class="bg-gradient-to-br from-pink-500/10 via-rose-500/5 to-transparent border border-pink-300 rounded-2xl p-5">
-                            <div class="flex items-center gap-2.5 text-pink-700 font-bold text-sm mb-2">
-                                <i data-lucide="bus-front" class="w-5 h-5 text-pink-600"></i>
-                                <span>[필독] 과천분원 전용 셔틀버스 운행 안내</span>
-                            </div>
-                            <div class="text-xs text-slate-600 space-y-2">
-                                <div class="p-2.5 bg-white/80 rounded-lg border border-pink-200/60">
-                                    <strong class="text-slate-800 block text-xs mb-0.5">정부과천청사역 ⇄ 과천분원 셔틀버스</strong>
-                                    <ul class="list-disc list-inside space-y-0.5 text-slate-600">
-                                        <li><strong>탑승 위치:</strong> 지하철 4호선 <strong>정부과천청사역 6번 출구</strong> 앞 '교육원삼거리' 승차장</li>
-                                        <li><strong>출근 시간대 (07:15 ~ 09:00):</strong> 08:00~09:00 집중 출근 시간대 <strong>약 15분 간격 수시 운행</strong></li>
-                                        <li><strong>일반 교육 시간대:</strong> 매시 정각 및 특정 배차 간격(15분, 30분, 45분) 정기 운행</li>
-                                        <li><strong>소요 시간:</strong> 역에서 인재원까지 약 3~5분 소요 (도보 이동 시 약 15~20분 오르막)</li>
-                                    </ul>
-                                </div>
-                                <p class="text-[11px] text-rose-700 font-medium">
-                                    ※ 과천 분원은 주차 면수가 협소하고 승용차 요일제가 시행되므로 대중교통 및 셔틀버스 이용을 적극 권장합니다.
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- 교통수단 상세 안내 -->
-                    <div class="lg:col-span-6 space-y-4">
-                        <!-- 1. 지하철 이용 안내 -->
-                        <div class="bg-white border border-pink-100 rounded-2xl p-5 hover:border-rose-400 transition shadow-xs">
-                            <div class="flex items-center gap-3 mb-2 text-rose-600 font-bold text-base">
-                                <i data-lucide="subway" class="w-5 h-5"></i> 1. 지하철 (수도권 전철 4호선)
-                            </div>
-                            <p class="text-slate-600 text-xs sm:text-sm leading-relaxed">
-                                • <strong>하차역:</strong> 수도권 전철 4호선 <strong>‘정부과천청사역’</strong> 하차<br>
-                                • <strong>출구:</strong> <strong>6번 출구</strong> (또는 7번 출구)로 나와 교육원삼거리 방향으로 직진<br>
-                                • <strong>환승:</strong> 6번 출구 전용 정류장에서 <strong>인재원 셔틀버스</strong> 탑승 (도보 이동 시 교육원로 방향으로 15~20분 소요).
-                            </p>
-                        </div>
-
-                        <!-- 2. 시내버스 상세 노선번호 -->
-                        <div class="bg-white border border-pink-100 rounded-2xl p-5 hover:border-pink-400 transition shadow-xs">
-                            <div class="flex items-center gap-3 mb-2 text-pink-600 font-bold text-base">
-                                <i data-lucide="bus" class="w-5 h-5"></i> 2. 시내버스 상세 노선 번호
-                            </div>
-                            <p class="text-slate-600 text-xs sm:text-sm leading-relaxed mb-3">
-                                <strong>‘정부과천청사’</strong> 또는 <strong>‘KT과천지사’</strong> 정류장에서 하차합니다.
-                            </p>
-                            <div class="space-y-2 text-xs">
-                                <div class="bg-rose-50/50 p-2.5 rounded-lg border border-pink-100">
-                                    <span class="font-bold text-pink-700 block mb-1">■ 서울 간선버스 (파랑)</span>
-                                    <span class="text-slate-700 font-medium">441번, 502번, 540번, 541번, 542번</span>
-                                </div>
-                                <div class="bg-rose-50/50 p-2.5 rounded-lg border border-pink-100">
-                                    <span class="font-bold text-rose-700 block mb-1">■ 경기 일반 시내버스 (초록)</span>
-                                    <span class="text-slate-700 font-medium">1-1번, 9번, 9-3번, 11-1번, 11-2번, 11-5번, 777번, 917번</span>
-                                </div>
-                                <div class="bg-rose-50/50 p-2.5 rounded-lg border border-pink-100">
-                                    <span class="font-bold text-fuchsia-700 block mb-1">■ 직행좌석 / 광역버스 (빨강)</span>
-                                    <span class="text-slate-700 font-medium">1550-3번, 3030번, 7002번, 7007-1번</span>
-                                </div>
-                                <div class="bg-rose-50/50 p-2.5 rounded-lg border border-pink-100">
-                                    <span class="font-bold text-slate-700 block mb-1">■ 공항버스 / 마을버스</span>
-                                    <span class="text-slate-700 font-medium">공항버스 8842번 (인천공항 ↔ 과천) / 과천 마을버스 1번, 2번, 3번, 5번</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- 3. 승용차 및 주차 안내 -->
-                        <div class="bg-white border border-pink-100 rounded-2xl p-5 hover:border-fuchsia-400 transition shadow-xs">
-                            <div class="flex items-center gap-3 mb-2 text-fuchsia-600 font-bold text-base">
-                                <i data-lucide="car" class="w-5 h-5"></i> 3. 승용차 이용 및 주차 유의사항
-                            </div>
-                            <p class="text-slate-600 text-xs sm:text-sm leading-relaxed">
-                                • <strong>경로:</strong> 사당/양재 ▷ 과천대로 ▷ 정부과천청사 방면 진입 ▷ 도서관삼거리 우회전 ▷ 교육원삼거리 우회전 후 교육원로 방면 직진<br>
-                                • <strong>네비게이션:</strong> '국가공무원인재개발원 과천분원' (경기도 과천시 교육원로 118)<br>
-                                • <strong>주차 유의:</strong> 청사 내 주차 공간 부족 및 요일제 차량 출입 제한이 있으므로 방문 전 담당부서 확인 필수.
-                            </p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-        </div>
-    </section>
-
-    <!-- 자주 묻는 질문 (FAQ) -->
-    <section class="py-16 bg-rose-50/40 border-t border-pink-100">
-        <div class="max-w-4xl mx-auto px-4 sm:px-6">
-            <h3 class="text-2xl font-bold text-slate-900 text-center mb-8">교육생 및 방문자 자주 묻는 질문</h3>
-            <div class="space-y-4">
-                <details class="bg-white rounded-xl p-5 border border-pink-100 cursor-pointer group shadow-xs">
-                    <summary class="font-bold text-slate-800 flex justify-between items-center list-none">
-                        <span>교육생 기숙사(생활관) 및 편의시설 이용이 가능한가요?</span>
-                        <i data-lucide="chevron-down" class="w-5 h-5 text-pink-400 group-open:rotate-180 transition"></i>
-                    </summary>
-                    <p class="mt-3 text-sm text-slate-600 leading-relaxed">
-                        진천 본원의 경우 합숙 교육생을 위한 쾌적한 1인 1실/2인 1실 생활관과 식당, 체육관, 도서관, 카페 등의 복지 편의시설을 완비하고 있습니다. 교육과정별 입실 기준에 따라 배정됩니다.
-                    </p>
-                </details>
-                <details class="bg-white rounded-xl p-5 border border-pink-100 cursor-pointer group shadow-xs">
-                    <summary class="font-bold text-slate-800 flex justify-between items-center list-none">
-                        <span>청사 출입 시 보안 및 주차는 어떻게 되나요?</span>
-                        <i data-lucide="chevron-down" class="w-5 h-5 text-pink-400 group-open:rotate-180 transition"></i>
-                    </summary>
-                    <p class="mt-3 text-sm text-slate-600 leading-relaxed">
-                        정부보안시설로 지정되어 있으므로 방문 시 정문 안내실에서 신분증을 제시하고 방문증을 교부받으셔야 합니다. 교육생 주차 공간이 마련되어 있으나 대중교통 이용을 적극 권장합니다.
-                    </p>
-                </details>
-            </div>
-        </div>
-    </section>
-
-    <!-- 푸터 -->
-    <footer class="bg-slate-950 text-slate-400 text-xs py-12 mt-auto border-t border-slate-800">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex flex-col md:flex-row justify-between items-center gap-6 pb-8 border-b border-slate-800/80">
-                <div class="flex items-center gap-3">
-                    <div class="w-8 h-8 rounded-lg bg-pink-600 flex items-center justify-center text-white font-bold text-sm">
-                        NHI
-                    </div>
-                    <span class="text-base font-bold text-white tracking-tight">국가공무원인재개발원 안내 포털</span>
-                </div>
-                <div class="flex flex-wrap gap-6 text-slate-400 text-xs">
-                    <a href="https://www.nhi.go.kr" target="_blank" class="hover:text-pink-300 transition">공식 누리집</a>
-                    <a href="https://e-learning.nhi.go.kr" target="_blank" class="hover:text-pink-300 transition">나라배움터</a>
-                    <a href="https://www.mpm.go.kr" target="_blank" class="hover:text-pink-300 transition">인사혁신처</a>
-                </div>
-            </div>
-            <div class="pt-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 text-[11px] text-slate-400">
-                <p>
-                    (본원) 충청북도 진천군 덕산읍 교학로 84 (우 27873) 대표전화 : 043-931-6114<br class="sm:hidden">
-                    <span class="hidden sm:inline"> | </span>(분원) 경기도 과천시 교육원로 118 (우 13809) 대표전화 : 02-500-8500
-                </p>
-                <p>&copy; National Human Resources Development Institute. All Rights Reserved.</p>
-            </div>
-        </div>
-    </footer>
-
-    <!-- 자바스크립트 상호작용 -->
-    <script>
-        // Lucide 아이콘 초기화
-        lucide.createIcons();
-
-        // 모바일 메뉴 토글
-        const menuBtn = document.getElementById('mobile-menu-btn');
-        const mobileMenu = document.getElementById('mobile-menu');
-        menuBtn.addEventListener('click', () => {
-            mobileMenu.classList.toggle('hidden');
-        });
-
-        // 탭 전환 로직 (진천본원 / 과천분원)
-        function switchCampus(campus) {
-            const jincheonBtn = document.getElementById('tab-jincheon');
-            const gwacheonBtn = document.getElementById('tab-gwacheon');
-            const jincheonContent = document.getElementById('campus-jincheon');
-            const gwacheonContent = document.getElementById('campus-gwacheon');
-
-            if (campus === 'jincheon') {
-                jincheonBtn.className = "px-6 py-2.5 rounded-xl font-bold text-sm bg-pink-600 text-white shadow-sm transition";
-                gwacheonBtn.className = "px-6 py-2.5 rounded-xl font-medium text-sm text-slate-600 hover:text-slate-900 transition";
-                jincheonContent.classList.remove('hidden');
-                gwacheonContent.classList.add('hidden');
-            } else {
-                gwacheonBtn.className = "px-6 py-2.5 rounded-xl font-bold text-sm bg-rose-600 text-white shadow-sm transition";
-                jincheonBtn.className = "px-6 py-2.5 rounded-xl font-medium text-sm text-slate-600 hover:text-slate-900 transition";
-                gwacheonContent.classList.remove('hidden');
-                jincheonContent.classList.add('hidden');
+          // Pick the best sheet (prefer '월간' or first sheet with sufficient data)
+          let targetSheetName = workbook.SheetNames[0];
+          for (let name of workbook.SheetNames) {
+            if (name.includes('월간') || name.includes('매출') || name.includes('Data')) {
+              targetSheetName = name;
+              break;
             }
+          }
+
+          const worksheet = workbook.Sheets[targetSheetName];
+          // Convert sheet to json 2D array
+          const rawRows = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+
+          if (!rawRows || rawRows.length < 2) {
+            alert('데이터가 충분하지 않거나 올바른 엑셀 테이블 형식이 아닙니다.');
+            return;
+          }
+
+          // Parse Headers & Series
+          const headerRow = rawRows[0];
+          const timeHeader = headerRow[0] || '기준시점';
+          
+          // Series columns (Column 1 to end)
+          const seriesList = [];
+          for (let c = 1; c < headerRow.length; c++) {
+            if (headerRow[c] !== undefined && headerRow[c] !== null && String(headerRow[c]).trim() !== '') {
+              seriesList.push({
+                index: c,
+                name: String(headerRow[c]).trim(),
+                data: []
+              });
+            }
+          }
+
+          if (seriesList.length === 0) {
+            alert('분석할 숫자 데이터 열을 찾을 수 없습니다.');
+            return;
+          }
+
+          const labels = [];
+          for (let r = 1; r < rawRows.length; r++) {
+            const row = rawRows[r];
+            if (!row || row[0] === undefined || row[0] === null || String(row[0]).trim() === '') continue;
+
+            // Format date label
+            let label = row[0];
+            if (label instanceof Date) {
+              const y = label.getFullYear();
+              const m = String(label.getMonth() + 1).padStart(2, '0');
+              label = `${y}-${m}`;
+            } else {
+              label = String(label).trim();
+            }
+            labels.push(label);
+
+            seriesList.forEach(s => {
+              let val = parseFloat(row[s.index]);
+              s.data.push(isNaN(val) ? 0 : val);
+            });
+          }
+
+          const endTime = performance.now();
+          const execTime = ((endTime - startTime) / 1000).toFixed(3);
+
+          parsedDataset = {
+            fileName: file.name,
+            sheetName: targetSheetName,
+            labels: labels,
+            series: seriesList,
+            execTime: execTime
+          };
+
+          // Render Dashboard
+          renderDashboard();
+
+        } catch (err) {
+          console.error(err);
+          alert('엑셀 파일을 읽는 도중 오류가 발생했습니다: ' + err.message);
         }
-    </script>
+      };
+
+      reader.readAsArrayBuffer(file);
+    }
+
+    // Statistical Computations
+    function sum(arr) { return arr.reduce((a, b) => a + b, 0); }
+    function mean(arr) { return sum(arr) / arr.length; }
+    function variance(arr) {
+      const m = mean(arr);
+      return arr.reduce((acc, v) => acc + Math.pow(v - m, 2), 0) / (arr.length - 1);
+    }
+    function stdDev(arr) { return Math.sqrt(variance(arr)); }
+    function median(arr) {
+      const sorted = [...arr].sort((a, b) => a - b);
+      const mid = Math.floor(sorted.length / 2);
+      return sorted.length % 2 !== 0 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
+    }
+    function pearsonCorr(x, y) {
+      const mx = mean(x), my = mean(y);
+      let num = 0, denX = 0, denY = 0;
+      for (let i = 0; i < x.length; i++) {
+        const dx = x[i] - mx;
+        const dy = y[i] - my;
+        num += dx * dy;
+        denX += dx * dx;
+        denY += dy * dy;
+      }
+      const denom = Math.sqrt(denX) * Math.sqrt(denY);
+      return denom === 0 ? 0 : num / denom;
+    }
+    function linearRegression(yArr) {
+      const n = yArr.length;
+      let sumX = 0, sumY = 0, sumXY = 0, sumX2 = 0;
+      for (let i = 0; i < n; i++) {
+        const x = i + 1;
+        const y = yArr[i];
+        sumX += x;
+        sumY += y;
+        sumXY += x * y;
+        sumX2 += x * x;
+      }
+      const slope = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX);
+      const intercept = (sumY - slope * sumX) / n;
+      
+      const yMean = sumY / n;
+      let ssTot = 0, ssRes = 0;
+      for (let i = 0; i < n; i++) {
+        const x = i + 1;
+        const yPred = slope * x + intercept;
+        ssTot += Math.pow(yArr[i] - yMean, 2);
+        ssRes += Math.pow(yArr[i] - yPred, 2);
+      }
+      const r2 = ssTot === 0 ? 0 : 1 - (ssRes / ssTot);
+      return { slope, intercept, r2 };
+    }
+
+    // Render Dashboard
+    function renderDashboard() {
+      if (!parsedDataset) return;
+
+      document.getElementById('uploadSection').classList.add('hidden');
+      document.getElementById('dashboardSection').classList.remove('hidden');
+      document.getElementById('resetButtonContainer').classList.remove('hidden');
+
+      // Set Meta Info
+      document.getElementById('metaFileName').innerText = parsedDataset.fileName;
+      document.getElementById('metaSheetName').innerText = parsedDataset.sheetName;
+      document.getElementById('metaRowCount').innerText = parsedDataset.labels.length;
+      document.getElementById('metaColCount').innerText = parsedDataset.series.length;
+      document.getElementById('metaExecTime').innerText = parsedDataset.execTime;
+
+      // Render 3 Methods
+      renderKPIs();
+      renderMethod1();
+      renderMethod2();
+      renderMethod3();
+    }
+
+    function renderKPIs() {
+      const container = document.getElementById('kpiContainer');
+      container.innerHTML = parsedDataset.series.map((s, idx) => {
+        const color = COLORS[idx % COLORS.length];
+        const total = sum(s.data).toFixed(2);
+        const avg = mean(s.data).toFixed(2);
+        const sd = stdDev(s.data).toFixed(2);
+        const cv = ((sd / avg) * 100).toFixed(1);
+
+        return `
+          <div class="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-sm relative overflow-hidden">
+            <div class="flex items-center justify-between mb-3">
+              <span class="px-2.5 py-0.5 rounded-md text-xs font-bold" style="background-color: ${color.light}; color: ${color.border};">
+                ${s.name}
+              </span>
+              <span class="text-xs font-semibold text-slate-400">총 ${s.data.length}개 시점</span>
+            </div>
+            <div>
+              <p class="text-xs text-slate-400">누적 합계</p>
+              <p class="text-2xl font-extrabold text-slate-900">${total}</p>
+            </div>
+            <div class="grid grid-cols-2 gap-2 mt-3 pt-3 border-t border-slate-100 text-xs">
+              <div>
+                <span class="text-slate-400">평균:</span>
+                <span class="font-semibold text-slate-700 ml-1">${avg}</span>
+              </div>
+              <div>
+                <span class="text-slate-400">변동계수(CV):</span>
+                <span class="font-semibold text-indigo-600 ml-1">${cv}%</span>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // 1. Descriptive Statistics
+    function renderMethod1() {
+      const thead = document.getElementById('descTableHead');
+      thead.innerHTML = `<th class="py-2.5 px-3 font-semibold">통계 지표</th>` + 
+        parsedDataset.series.map((s, idx) => {
+          const color = COLORS[idx % COLORS.length];
+          return `<th class="py-2.5 px-3 font-semibold" style="color: ${color.border}">${s.name}</th>`;
+        }).join('');
+
+      const rows = [
+        { label: '데이터 개수 (N)', fn: s => `${s.data.length}건` },
+        { label: '누적 합계 (Sum)', fn: s => sum(s.data).toFixed(2) },
+        { label: '산술평균 (Mean)', fn: s => mean(s.data).toFixed(2) },
+        { label: '중앙값 (Median)', fn: s => median(s.data).toFixed(2) },
+        { label: '표준편차 (Std Dev)', fn: s => `±${stdDev(s.data).toFixed(2)}` },
+        { label: '변동계수 (CV, %)', fn: s => `${((stdDev(s.data) / mean(s.data)) * 100).toFixed(1)}%` },
+        { label: '최솟값 (Min)', fn: s => Math.min(...s.data).toFixed(2) },
+        { label: '최댓값 (Max)', fn: s => Math.max(...s.data).toFixed(2) },
+        { label: '전체 범위 (Range)', fn: s => (Math.max(...s.data) - Math.min(...s.data)).toFixed(2) }
+      ];
+
+      const tbody = document.getElementById('descTableBody');
+      tbody.innerHTML = rows.map(r => `
+        <tr class="hover:bg-slate-50 transition">
+          <td class="py-2 px-3 font-medium text-slate-800">${r.label}</td>
+          ${parsedDataset.series.map(s => `<td class="py-2 px-3 font-semibold">${r.fn(s)}</td>`).join('')}
+        </tr>
+      `).join('');
+
+      // Explanation
+      let highestCvSeries = [...parsedDataset.series].sort((a, b) => (stdDev(b.data)/mean(b.data)) - (stdDev(a.data)/mean(a.data)))[0];
+      let lowestCvSeries = [...parsedDataset.series].sort((a, b) => (stdDev(a.data)/mean(a.data)) - (stdDev(b.data)/mean(b.data)))[0];
+
+      document.getElementById('descExplanation').innerHTML = `
+        <p><strong>• 변동성(안정성) 비교:</strong><br>
+        <strong>${highestCvSeries.name}</strong>의 변동계수(CV)가 <strong>${((stdDev(highestCvSeries.data)/mean(highestCvSeries.data))*100).toFixed(1)}%</strong>로 가장 높아 시기별 편차가 큽니다. 반대로 <strong>${lowestCvSeries.name}</strong>은 <strong>${((stdDev(lowestCvSeries.data)/mean(lowestCvSeries.data))*100).toFixed(1)}%</strong>로 가장 안정적인 흐름을 유지하고 있습니다.</p>
+        <p><strong>• 평균과 중앙값 비교:</strong><br>
+        모든 항목의 평균과 중앙값 간의 격차가 크지 않아, 데이터가 특정 극단치에 심각하게 왜곡되지 않고 고르게 분포되어 있음을 나타냅니다.</p>
+      `;
+    }
+
+    // 2. Linear Regression
+    function renderMethod2() {
+      const regResults = parsedDataset.series.map(s => ({
+        series: s,
+        reg: linearRegression(s.data)
+      }));
+
+      // Render Equations
+      document.getElementById('regressionEquations').innerHTML = regResults.map((r, idx) => {
+        const color = COLORS[idx % COLORS.length];
+        const sign = r.reg.slope >= 0 ? '+' : '';
+        const slopeDesc = r.reg.slope >= 0 ? '단위 시점마다 증가 추세' : '단위 시점마다 감소 추세';
+
+        return `
+          <div class="p-3 rounded-xl border border-slate-200" style="background-color: ${color.light}">
+            <span class="font-bold block" style="color: ${color.trend}">${r.series.name}</span>
+            <p class="font-mono text-xs font-semibold my-1 text-slate-800">
+              y = ${sign}${r.reg.slope.toFixed(4)}x + ${r.reg.intercept.toFixed(2)}
+            </p>
+            <div class="flex justify-between items-center text-[11px] text-slate-500">
+              <span>기울기: ${sign}${r.reg.slope.toFixed(4)} (${slopeDesc})</span>
+              <span class="font-semibold text-slate-700">설명력 R²: ${r.reg.r2.toFixed(3)}</span>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      // Top growing vs declining series
+      const sortedByGrowth = [...regResults].sort((a, b) => b.reg.slope - a.reg.slope);
+      const topGrower = sortedByGrowth[0];
+      const bottomGrower = sortedByGrowth[sortedByGrowth.length - 1];
+
+      document.getElementById('regressionExplanation').innerHTML = `
+        <h4 class="font-bold text-slate-900 mb-1 flex items-center gap-1.5">
+          <i class="fa-solid fa-arrow-trend-up text-blue-600"></i> 성장 추세 해설
+        </h4>
+        <p>
+          가장 빠른 속도로 우상향한 항목은 <strong>${topGrower.series.name}</strong>(기울기: +${topGrower.reg.slope.toFixed(4)}, $R^2=${topGrower.reg.r2.toFixed(3)}$)입니다.<br>
+          반면 <strong>${bottomGrower.series.name}</strong>은 기울기가 ${bottomGrower.reg.slope.toFixed(4)}로 ${bottomGrower.reg.slope < 0 ? '완만한 하향/역성장 추세' : '상대적으로 완만한 성장'}를 보이고 있습니다.
+        </p>
+      `;
+
+      // Render Chart
+      const ctx = document.getElementById('regressionChart').getContext('2d');
+      if (regressionChartInstance) regressionChartInstance.destroy();
+
+      const datasets = [];
+      regResults.forEach((r, idx) => {
+        const color = COLORS[idx % COLORS.length];
+        // Actual Line
+        datasets.push({
+          label: `${r.series.name} (실측)`,
+          data: r.series.data,
+          borderColor: color.border,
+          backgroundColor: color.border,
+          pointRadius: 2,
+          borderWidth: 1.5,
+          tension: 0.1
+        });
+        // Trendline
+        const trendData = r.series.data.map((_, i) => r.reg.slope * (i + 1) + r.reg.intercept);
+        datasets.push({
+          label: `${r.series.name} (추세선)`,
+          data: trendData,
+          borderColor: color.trend,
+          borderDash: [5, 4],
+          pointRadius: 0,
+          borderWidth: 2
+        });
+      });
+
+      regressionChartInstance = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: parsedDataset.labels,
+          datasets: datasets
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { position: 'top', labels: { boxWidth: 12, font: { size: 10 } } },
+            tooltip: { mode: 'index', intersect: false }
+          },
+          scales: {
+            x: { ticks: { maxTicksLimit: 12, font: { size: 10 } }, grid: { display: false } },
+            y: { title: { display: true, text: '수치', font: { size: 10 } } }
+          }
+        }
+      });
+    }
+
+    // 3. Correlation Matrix
+    function renderMethod3() {
+      const thead = document.getElementById('corrTableHead');
+      thead.innerHTML = `<th class="p-2.5 text-left font-semibold">피어슨 상관계수 (r)</th>` +
+        parsedDataset.series.map((s, idx) => {
+          const color = COLORS[idx % COLORS.length];
+          return `<th class="p-2.5 font-semibold" style="color: ${color.border}">${s.name}</th>`;
+        }).join('');
+
+      const pairs = [];
+
+      const tbody = document.getElementById('corrTableBody');
+      tbody.innerHTML = parsedDataset.series.map((s1, i) => {
+        const rowCells = parsedDataset.series.map((s2, j) => {
+          if (i === j) {
+            return `<td class="p-2.5 font-bold text-slate-800">1.000</td>`;
+          }
+          const r = pearsonCorr(s1.data, s2.data);
+          if (i < j) {
+            pairs.push({ name1: s1.name, name2: s2.name, r: r });
+          }
+
+          let badgeClass = "bg-slate-100 text-slate-700";
+          if (r > 0.6) badgeClass = "bg-blue-100 text-blue-800 font-bold";
+          else if (r < -0.2) badgeClass = "bg-rose-100 text-rose-800 font-bold";
+
+          return `<td class="p-2.5"><span class="px-2 py-0.5 rounded text-xs ${badgeClass}">${r >= 0 ? '+' : ''}${r.toFixed(3)}</span></td>`;
+        }).join('');
+
+        return `
+          <tr class="hover:bg-slate-50 transition">
+            <td class="p-2.5 text-left font-bold text-slate-700">${s1.name}</td>
+            ${rowCells}
+          </tr>
+        `;
+      }).join('');
+
+      // Explanation
+      let explHTML = '';
+      if (pairs.length > 0) {
+        pairs.sort((a, b) => b.r - a.r);
+        explHTML = pairs.map(p => {
+          let relationText = '';
+          if (p.r >= 0.7) relationText = `<strong class="text-blue-700">매우 강한 양의 상관관계</strong>를 보여 동반 성장/연동되는 성향이 뚜렷합니다.`;
+          else if (p.r >= 0.3) relationText = `<strong class="text-slate-800">완만한 양의 상관관계</strong>가 관찰됩니다.`;
+          else if (p.r <= -0.3) relationText = `<strong class="text-rose-700">음의 상관관계</strong>를 보여 상호 대체 관계 또는 반대 사이클을 보입니다.`;
+          else relationText = `유의미한 상관성이 적고 서로 독립적으로 움직입니다.`;
+
+          return `<p><strong>• ${p.name1} vs ${p.name2} ($r = ${p.r >= 0 ? '+' : ''}${p.r.toFixed(3)}$):</strong><br>${relationText}</p>`;
+        }).join('');
+      } else {
+        explHTML = '<p>단일 항목이므로 상호 상관계수를 계산할 수 없습니다.</p>';
+      }
+
+      document.getElementById('corrExplanation').innerHTML = explHTML;
+    }
+
+    // Reset and Load New File
+    function resetApp() {
+      parsedDataset = null;
+      if (regressionChartInstance) {
+        regressionChartInstance.destroy();
+        regressionChartInstance = null;
+      }
+      document.getElementById('fileInput').value = '';
+      document.getElementById('dashboardSection').classList.add('hidden');
+      document.getElementById('resetButtonContainer').classList.add('hidden');
+      document.getElementById('uploadSection').classList.remove('hidden');
+    }
+  </script>
 </body>
 </html>
